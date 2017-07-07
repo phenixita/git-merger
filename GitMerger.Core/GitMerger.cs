@@ -28,31 +28,42 @@ namespace GitMerger.Core
             IRepository repoTarget,
             ICopyService copyService,
             Branch branchToClone,
-            string defaultBranchFriendlyName,
+            string rootBranchFriendlyName,
             Signature author,
             Signature committer,
             DirectoryInfo subDirTarget = null
             )
         {
-            if (defaultBranchFriendlyName == null)
+            if (rootBranchFriendlyName == null)
             {
-                throw new ArgumentNullException(nameof(defaultBranchFriendlyName));
+                throw new ArgumentNullException(nameof(rootBranchFriendlyName));
             }
 
             Commands.Checkout(repoSource, branchToClone);
 
-            Commands.Checkout(repoTarget, defaultBranchFriendlyName);
+            Commands.Checkout(repoTarget, rootBranchFriendlyName);
 
-            if (!repoTarget.Branches.Any(b => b.FriendlyName == branchToClone.FriendlyName))
-                repoTarget.CreateBranch(branchToClone.FriendlyName);
+            var aaaa = branchToClone.FriendlyName;
+            if (aaaa.Contains("origin/")) aaaa = aaaa.Replace("origin/", "");
 
-            Commands.Checkout(repoTarget, repoTarget.Branches[branchToClone.FriendlyName]);
+            if (!repoTarget.Branches.Any(b => b.FriendlyName == aaaa))
+                repoTarget.CreateBranch(aaaa);
+
+            Commands.Checkout(repoTarget, repoTarget.Branches[aaaa]);
 
             copyService.Copy(new DirectoryInfo(repoSource.Info.WorkingDirectory), subDirTarget ?? new DirectoryInfo(repoTarget.Info.WorkingDirectory), true);
 
             Commands.Stage(repoTarget, "*");
 
-            repoTarget.Commit("Import " + branchToClone, author, committer);
+            try
+            {
+                repoTarget.Commit("Import " + branchToClone, author, committer);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e); 
+            }
+                
         }
     }
 }
