@@ -63,14 +63,14 @@ namespace GitMerger
                 return true;
             }
 
-            // Check if it's already a valid git repository
+            // Check if it's already a valid git repository (handled before scenarios 2 and 3)
             if (IsValidGitRepository(targetPath))
             {
                 Console.WriteLine("La directory di destinazione è già un repository git valido.");
                 return true;
             }
 
-            // Scenario 3: Target directory exists and is empty
+            // Scenario 2: Target directory exists and is empty
             if (IsDirectoryEmpty(targetPath))
             {
                 Console.WriteLine("La directory di destinazione è vuota. Inizializzazione come repository git...");
@@ -78,7 +78,7 @@ namespace GitMerger
                 return true;
             }
 
-            // Scenario 2: Target directory exists but is not empty and not a git repo
+            // Scenario 3: Target directory exists but is not empty and not a git repo
             Console.WriteLine($"La directory di destinazione '{targetPath}' esiste ed è non vuota.");
             Console.WriteLine("Vuoi cancellare il contenuto della directory, inizializzarla come repository git e procedere? (s/n):");
             var response = Console.ReadLine()?.Trim().ToLower();
@@ -86,7 +86,11 @@ namespace GitMerger
             if (response == "s" || response == "si" || response == "y" || response == "yes")
             {
                 Console.WriteLine("Cancellazione del contenuto della directory in corso...");
-                ClearDirectory(targetPath);
+                if (!ClearDirectory(targetPath))
+                {
+                    Console.WriteLine("Errore durante la cancellazione della directory. Operazione annullata.");
+                    return false;
+                }
                 Console.WriteLine("Contenuto cancellato.");
                 InitializeGitRepository(targetPath);
                 return true;
@@ -139,6 +143,11 @@ namespace GitMerger
             {
                 return false;
             }
+            catch (Exception)
+            {
+                // Handle corrupted or inaccessible repositories
+                return false;
+            }
         }
 
         /// <summary>
@@ -155,18 +164,30 @@ namespace GitMerger
         /// Clears all contents of a directory.
         /// </summary>
         /// <param name="path">Path to the directory to clear</param>
-        static void ClearDirectory(string path)
+        /// <returns>True if successful, false if any errors occurred</returns>
+        static bool ClearDirectory(string path)
         {
-            var di = new DirectoryInfo(path);
-
-            foreach (var file in di.GetFiles())
+            try
             {
-                file.Delete();
+                var di = new DirectoryInfo(path);
+
+                foreach (var file in di.GetFiles())
+                {
+                    file.Attributes = FileAttributes.Normal;
+                    file.Delete();
+                }
+
+                foreach (var dir in di.GetDirectories())
+                {
+                    dir.Delete(true);
+                }
+
+                return true;
             }
-
-            foreach (var dir in di.GetDirectories())
+            catch (Exception ex)
             {
-                dir.Delete(true);
+                Console.WriteLine($"Errore durante la cancellazione: {ex.Message}");
+                return false;
             }
         }
     }
