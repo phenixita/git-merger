@@ -63,41 +63,42 @@ namespace GitMerger
                 return true;
             }
 
-            // Check if it's already a valid git repository (handled before scenarios 2 and 3)
-            if (IsValidGitRepository(targetPath))
+            // Scenario 2: Target directory exists but is not empty - check first before other operations
+            if (!IsDirectoryEmpty(targetPath))
             {
-                Console.WriteLine("La directory di destinazione è già un repository git valido.");
-                return true;
-            }
-
-            // Scenario 2: Target directory exists and is empty
-            if (IsDirectoryEmpty(targetPath))
-            {
-                Console.WriteLine("La directory di destinazione è vuota. Inizializzazione come repository git...");
-                InitializeGitRepository(targetPath);
-                return true;
-            }
-
-            // Scenario 3: Target directory exists but is not empty and not a git repo
-            Console.WriteLine($"La directory di destinazione '{targetPath}' esiste ed è non vuota.");
-            Console.WriteLine("Vuoi cancellare il contenuto della directory, inizializzarla come repository git e procedere? (s/n):");
-            var response = Console.ReadLine()?.Trim().ToLower();
-
-            if (response == "s" || response == "si" || response == "y" || response == "yes")
-            {
-                Console.WriteLine("Cancellazione del contenuto della directory in corso...");
-                if (!ClearDirectory(targetPath))
+                // Check if it's already a valid git repository
+                if (IsValidGitRepository(targetPath))
                 {
-                    Console.WriteLine("Errore durante la cancellazione della directory. Operazione annullata.");
-                    return false;
+                    Console.WriteLine("La directory di destinazione è già un repository git valido.");
+                    return true;
                 }
-                Console.WriteLine("Contenuto cancellato.");
-                InitializeGitRepository(targetPath);
-                return true;
+
+                // Directory is not empty and not a git repo - ask user
+                Console.WriteLine($"La directory di destinazione '{targetPath}' esiste ed è non vuota.");
+                Console.WriteLine("Vuoi cancellare il contenuto della directory, inizializzarla come repository git e procedere? (s/n):");
+                var response = Console.ReadLine()?.Trim().ToLower();
+
+                if (response == "s" || response == "si" || response == "y" || response == "yes")
+                {
+                    Console.WriteLine("Cancellazione del contenuto della directory in corso...");
+                    if (!ClearDirectory(targetPath))
+                    {
+                        Console.WriteLine("Errore durante la cancellazione della directory. Operazione annullata.");
+                        return false;
+                    }
+                    Console.WriteLine("Contenuto cancellato.");
+                    InitializeGitRepository(targetPath);
+                    return true;
+                }
+
+                Console.WriteLine("Operazione annullata.");
+                return false;
             }
 
-            Console.WriteLine("Operazione annullata.");
-            return false;
+            // Scenario 3: Target directory exists and is empty
+            Console.WriteLine("La directory di destinazione è vuota. Inizializzazione come repository git...");
+            InitializeGitRepository(targetPath);
+            return true;
         }
 
         /// <summary>
