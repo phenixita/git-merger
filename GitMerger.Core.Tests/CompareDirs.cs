@@ -94,8 +94,10 @@ namespace GitMerger.Core.Tests
         // also be equal. Because equality as defined here is a simple value equality, not  
         // reference identity, it is possible that two or more objects will produce the same  
         // hash code.  
-        public int GetHashCode(System.IO.FileInfo fi)
+        public int GetHashCode(System.IO.FileInfo? fi)
         {
+            if (fi == null)
+                return 0;
             string s = String.Format("{0}{1}", fi.Name, fi.Length);
             return s.GetHashCode();
         }
