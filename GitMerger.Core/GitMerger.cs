@@ -1,10 +1,4 @@
 ﻿using LibGit2Sharp;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GitMerger.Core
 {
@@ -16,7 +10,7 @@ namespace GitMerger.Core
             string defaultBranchFriendlyName,
             Signature author,
             Signature committer,
-            DirectoryInfo subDirTarget = null)
+            DirectoryInfo? subDirTarget = null)
         {
             foreach (var branch in repoSource.Branches)
             {
@@ -31,7 +25,7 @@ namespace GitMerger.Core
             string rootBranchFriendlyName,
             Signature author,
             Signature committer,
-            DirectoryInfo subDirTarget = null
+            DirectoryInfo? subDirTarget = null
             )
         {
             if (rootBranchFriendlyName == null)

@@ -1,11 +1,5 @@
 ﻿using GitMerger.Core;
 using LibGit2Sharp;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GitMerger
 {
@@ -21,6 +15,12 @@ namespace GitMerger
 
             Console.WriteLine("Subdir:");
             var subdir = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(repoSourcePath) || string.IsNullOrEmpty(repoTargetPath) || string.IsNullOrEmpty(subdir))
+            {
+                Console.WriteLine("Errore: tutti i campi sono obbligatori");
+                return;
+            }
 
             var signature = new Signature(new Identity("test", "test@mail.eu"), DateTimeOffset.Now);
 

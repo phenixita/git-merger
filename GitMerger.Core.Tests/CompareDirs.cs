@@ -79,8 +79,12 @@ namespace GitMerger.Core.Tests
     {
         public FileCompare() { }
 
-        public bool Equals(System.IO.FileInfo f1, System.IO.FileInfo f2)
+        public bool Equals(System.IO.FileInfo? f1, System.IO.FileInfo? f2)
         {
+            if (f1 == null && f2 == null)
+                return true;
+            if (f1 == null || f2 == null)
+                return false;
             return (f1.Name == f2.Name &&
                     f1.Length == f2.Length);
         }
@@ -90,8 +94,10 @@ namespace GitMerger.Core.Tests
         // also be equal. Because equality as defined here is a simple value equality, not  
         // reference identity, it is possible that two or more objects will produce the same  
         // hash code.  
-        public int GetHashCode(System.IO.FileInfo fi)
+        public int GetHashCode(System.IO.FileInfo? fi)
         {
+            if (fi == null)
+                return 0;
             string s = String.Format("{0}{1}", fi.Name, fi.Length);
             return s.GetHashCode();
         }
