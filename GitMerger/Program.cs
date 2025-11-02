@@ -117,7 +117,7 @@ namespace GitMerger
                 
                 // Create an empty .gitkeep file to have something to commit
                 var gitkeepPath = Path.Combine(path, ".gitkeep");
-                File.WriteAllText(gitkeepPath, "");
+                File.Create(gitkeepPath).Close();
                 
                 Commands.Stage(repo, ".gitkeep");
                 repo.Commit("Initial commit", signature, signature);
