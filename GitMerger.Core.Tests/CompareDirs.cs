@@ -79,8 +79,12 @@ namespace GitMerger.Core.Tests
     {
         public FileCompare() { }
 
-        public bool Equals(System.IO.FileInfo f1, System.IO.FileInfo f2)
+        public bool Equals(System.IO.FileInfo? f1, System.IO.FileInfo? f2)
         {
+            if (f1 == null && f2 == null)
+                return true;
+            if (f1 == null || f2 == null)
+                return false;
             return (f1.Name == f2.Name &&
                     f1.Length == f2.Length);
         }
