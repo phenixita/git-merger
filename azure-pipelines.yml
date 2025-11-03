@@ -1,17 +1,33 @@
 trigger:
-- master
+  include:
+    branches:
+      - master
+  exclude:
+    paths:
+      - README.md  # Exclude README.md changes from triggering builds
+      - LICENSE
 
 pr:
 - master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'  # Use Windows agent since the project uses Robocopy (Windows-specific)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '9.x' 
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- script: dotnet restore GitMerger.sln
+  displayName: 'Restore NuGet packages'
+
+- script: dotnet build GitMerger.sln --configuration Release --no-restore
+  displayName: 'Build solution' 
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'GitMerger/bin/Release/net9.0'
+    ArtifactName: 'GitMergerArtifact'
+    publishLocation: 'Container'
+  displayName: 'Publish build artifacts'
