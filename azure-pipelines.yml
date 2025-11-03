@@ -1,11 +1,9 @@
 trigger:
-  include:
-    branches:
-      - master
+ paths:
   exclude:
-    paths:
-      - README.md  # Exclude README.md changes from triggering builds
-      - LICENSE
+    - README.md  # Exclude README.md changes from triggering builds
+    - LICENSE
+
 
 pr:
 - master
