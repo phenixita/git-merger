@@ -1,6 +1,6 @@
 # git-merger
 
-A .NET 9 command-line tool that ports the last commit from every branch of a source Git repository to a target repository, maintaining the same branch structure!
+A .NET 9 command-line tool that ports the last commit from every branch of a source Git repository to a target repository, maintaining the same branch structure.
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
