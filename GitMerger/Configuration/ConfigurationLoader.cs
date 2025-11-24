@@ -50,7 +50,7 @@ namespace GitMerger.Configuration
                 },
                 RootBranch = "main",
                 StagePatterns = new[] { "*" },
-                CopyService = "robocopy"
+                CopyService = "systemio"  // Cross-platform default
             };
 
             var json = JsonSerializer.Serialize(exampleConfig, new JsonSerializerOptions
