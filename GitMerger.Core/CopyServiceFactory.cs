@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace GitMerger.Core
 {
     public static class CopyServiceFactory
@@ -6,10 +8,24 @@ namespace GitMerger.Core
         {
             return serviceType.ToLower() switch
             {
+                "auto" => CreateAutoCopyService(),
                 "robocopy" => new RobocopyService(),
                 "systemio" => new SystemIOCopyService(),
-                _ => throw new ArgumentException($"Unknown copy service type: {serviceType}. Valid options are: robocopy, systemio")
+                _ => throw new ArgumentException($"Unknown copy service type: {serviceType}. Valid options are: auto, robocopy, systemio")
             };
+        }
+
+        private static ICopyService CreateAutoCopyService()
+        {
+            // Automatically detect OS and return appropriate copy service
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return new RobocopyService();
+            }
+            else
+            {
+                return new SystemIOCopyService();
+            }
         }
     }
 }

@@ -8,8 +8,8 @@ namespace GitMerger.Configuration
         public AuthorConfig Author { get; set; } = new AuthorConfig();
         public string RootBranch { get; set; } = "master";
         public string[] StagePatterns { get; set; } = new[] { "*" };
-        // Default to robocopy for Windows compatibility, but systemio recommended for cross-platform
-        public string CopyService { get; set; } = "robocopy";
+        // Default to auto: automatically selects robocopy on Windows, systemio on Linux/macOS
+        public string CopyService { get; set; } = "auto";
     }
 
     public class AuthorConfig

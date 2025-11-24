@@ -34,8 +34,9 @@ Before using git-merger, ensure you have the following installed:
   - Verify installation: `git --version`
 
 ### Platform Requirements
-- **Windows**: Fully supported (uses Robocopy for file operations by default)
-- **Linux/macOS**: Fully supported (use `--copy-service systemio` for cross-platform file operations)
+- **Windows**: Fully supported (automatically uses Robocopy)
+- **Linux/macOS**: Fully supported (automatically uses System.IO)
+- Copy service is automatically detected based on operating system
 
 ### Knowledge Requirements
 - Basic understanding of Git concepts (branches, commits, repositories)
@@ -110,7 +111,7 @@ Create a `gitmerger.json` file with your settings:
   },
   "RootBranch": "main",
   "StagePatterns": ["*"],
-  "CopyService": "systemio"
+  "CopyService": "auto"
 }
 ```
 
@@ -122,7 +123,7 @@ Create a `gitmerger.json` file with your settings:
 - `Author.Email`: Email for commit author
 - `RootBranch`: The root branch name (default: "master")
 - `StagePatterns`: Array of file patterns to stage (default: ["*"])
-- `CopyService`: Copy service to use - "robocopy" (Windows) or "systemio" (cross-platform)
+- `CopyService`: Copy service to use - "auto" (recommended, default), "robocopy" (Windows), or "systemio" (cross-platform)
 
 Then run:
 
@@ -146,17 +147,17 @@ dotnet GitMerger.dll \
   -n "John Doe" \
   -e "john@example.com"
 
-# For Linux/macOS, use the cross-platform copy service
+# Use a different root branch
+dotnet GitMerger.dll \
+  --config myconfig.json \
+  --root-branch main
+
+# Force a specific copy service (optional, auto-detection is default)
 dotnet GitMerger.dll \
   -s /path/to/source \
   -t /path/to/target \
   -d src \
   -c systemio
-
-# Use a different root branch
-dotnet GitMerger.dll \
-  --config myconfig.json \
-  --root-branch main
 ```
 
 **Command-Line Options:**
@@ -167,7 +168,7 @@ dotnet GitMerger.dll \
 - `--author-name <name>` or `-n`: Author name for commits
 - `--author-email <email>` or `-e`: Author email for commits
 - `--root-branch <name>` or `-b`: Root branch name
-- `--copy-service <type>` or `-c`: Copy service type (robocopy or systemio)
+- `--copy-service <type>` or `-c`: Copy service type (auto, robocopy, or systemio, default: auto)
 - `--init-config [path]`: Create example configuration file
 - `--help` or `-h`: Show help message
 
@@ -190,19 +191,36 @@ You'll be prompted for:
 
 ### Copy Services
 
-Git-merger supports two copy services:
+Git-merger supports automatic OS detection and three copy service modes:
 
-1. **robocopy** (Windows-only): Uses the Windows Robocopy utility for file operations
+1. **auto** (Default, recommended): Automatically detects the operating system
+   - Selects `robocopy` on Windows
+   - Selects `systemio` on Linux/macOS
+   - No manual configuration needed
+   
+2. **robocopy** (Windows-only): Uses the Windows Robocopy utility for file operations
    - Fast and efficient on Windows
    - Automatically excludes `.git` directory
    
-2. **systemio** (Cross-platform): Uses .NET's System.IO for file operations
+3. **systemio** (Cross-platform): Uses .NET's System.IO for file operations
    - Works on Windows, Linux, and macOS
    - Pure .NET implementation
 
-Choose the appropriate copy service based on your platform:
-- Windows: Use either `robocopy` (default) or `systemio`
-- Linux/macOS: Use `systemio`
+The copy service can be configured in three ways:
+```json
+{
+  "CopyService": "auto"  // Recommended: auto-detect (default)
+}
+```
+
+Or via command-line:
+```bash
+GitMerger -c auto    # Auto-detect (default)
+GitMerger -c robocopy  # Force robocopy
+GitMerger -c systemio  # Force systemio
+```
+
+**Recommendation**: Use the default `auto` setting, which automatically selects the best copy service for your operating system.
 
 ### Stage Patterns
 
@@ -299,7 +317,7 @@ Edit `gitmerger.json`:
   },
   "RootBranch": "master",
   "StagePatterns": ["*"],
-  "CopyService": "systemio"
+  "CopyService": "auto"
 }
 ```
 
@@ -309,14 +327,13 @@ Edit `gitmerger.json`:
 # Using configuration file
 dotnet GitMerger.dll --config gitmerger.json
 
-# Or using command-line arguments
+# Or using command-line arguments (copy service auto-detected)
 dotnet GitMerger.dll \
   -s /path/to/legacy-project \
   -t /path/to/new-project \
   -d src \
   -n "John Doe" \
-  -e "john@example.com" \
-  -c systemio
+  -e "john@example.com"
 ```
 
 #### 4. Result

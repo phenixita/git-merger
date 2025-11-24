@@ -107,7 +107,7 @@ namespace GitMerger.Configuration
             Console.WriteLine("  -n, --author-name <name>  Author name for commits");
             Console.WriteLine("  -e, --author-email <email> Author email for commits");
             Console.WriteLine("  -b, --root-branch <name>  Root branch name (default: master)");
-            Console.WriteLine("  -c, --copy-service <type> Copy service type: robocopy, systemio (default: robocopy)");
+            Console.WriteLine("  -c, --copy-service <type> Copy service type: auto, robocopy, systemio (default: auto)");
             Console.WriteLine("  -h, --help                Show this help message");
             Console.WriteLine();
             Console.WriteLine("Examples:");
