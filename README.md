@@ -2,6 +2,8 @@
 
 A .NET 9 command-line tool that ports the last commit from every branch of a source Git repository to a target repository, maintaining the same branch structure.
 
+> **🇮🇹 Versione Italiana**: Per leggere le istruzioni in italiano, consulta [README-ITA.md](README-ITA.md)
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
