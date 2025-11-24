@@ -8,6 +8,8 @@ namespace GitMerger
     {
         static void Main(string[] args)
         {
+            bool isInteractive = false;
+            
             try
             {
                 // Load configuration from file (if exists)
@@ -17,7 +19,9 @@ namespace GitMerger
                 config = CommandLineParser.ParseArguments(args, config);
                 
                 // Prompt for missing required values
-                config = PromptForMissingValues(config);
+                var (updatedConfig, wasInteractive) = PromptForMissingValues(config);
+                config = updatedConfig;
+                isInteractive = wasInteractive;
                 
                 // Validate configuration
                 if (!ValidateConfiguration(config))
@@ -62,34 +66,42 @@ namespace GitMerger
                 Console.WriteLine($"Errore: {ex.Message}");
                 Environment.Exit(1);
             }
-            
-            if (args.Length == 0)
+            finally
             {
-                Console.ReadLine();
+                // Wait for user input only if interactive mode was used
+                if (isInteractive)
+                {
+                    Console.ReadLine();
+                }
             }
         }
         
-        static GitMergerConfig PromptForMissingValues(GitMergerConfig config)
+        static (GitMergerConfig, bool) PromptForMissingValues(GitMergerConfig config)
         {
+            bool wasInteractive = false;
+            
             if (string.IsNullOrEmpty(config.SourceRepo))
             {
                 Console.WriteLine("Cartella repo partenza:");
                 config.SourceRepo = Console.ReadLine() ?? string.Empty;
+                wasInteractive = true;
             }
             
             if (string.IsNullOrEmpty(config.TargetRepo))
             {
                 Console.WriteLine("Cartella repo destinazione:");
                 config.TargetRepo = Console.ReadLine() ?? string.Empty;
+                wasInteractive = true;
             }
             
             if (string.IsNullOrEmpty(config.Subdir))
             {
                 Console.WriteLine("Subdir:");
                 config.Subdir = Console.ReadLine() ?? string.Empty;
+                wasInteractive = true;
             }
             
-            return config;
+            return (config, wasInteractive);
         }
         
         static bool ValidateConfiguration(GitMergerConfig config)

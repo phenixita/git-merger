@@ -4,6 +4,17 @@ namespace GitMerger.Configuration
     {
         public static GitMergerConfig ParseArguments(string[] args, GitMergerConfig baseConfig)
         {
+            // First pass: Check for --config flag and load the config file
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i].ToLower() == "--config" && i + 1 < args.Length)
+                {
+                    var configPath = args[i + 1];
+                    baseConfig = ConfigurationLoader.LoadConfiguration(configPath);
+                    break;
+                }
+            }
+            
             var config = new GitMergerConfig
             {
                 SourceRepo = baseConfig.SourceRepo,
@@ -19,6 +30,7 @@ namespace GitMerger.Configuration
                 CopyService = baseConfig.CopyService
             };
 
+            // Second pass: Process all other arguments (they override config values)
             for (int i = 0; i < args.Length; i++)
             {
                 switch (args[i].ToLower())
@@ -59,11 +71,8 @@ namespace GitMerger.Configuration
                             config.CopyService = args[++i];
                         break;
                     case "--config":
-                        if (i + 1 < args.Length)
-                        {
-                            var configPath = args[++i];
-                            config = ConfigurationLoader.LoadConfiguration(configPath);
-                        }
+                        // Already handled in first pass, skip
+                        i++;
                         break;
                     case "--init-config":
                         var outputPath = i + 1 < args.Length && !args[i + 1].StartsWith("-") 
