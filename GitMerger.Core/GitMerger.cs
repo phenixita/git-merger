@@ -10,11 +10,12 @@ namespace GitMerger.Core
             string defaultBranchFriendlyName,
             Signature author,
             Signature committer,
-            DirectoryInfo? subDirTarget = null)
+            DirectoryInfo? subDirTarget = null,
+            string[]? stagePatterns = null)
         {
             foreach (var branch in repoSource.Branches)
             {
-                CloneBranch(repoSource, repoTarget, copyService, branch, defaultBranchFriendlyName, author, committer, subDirTarget);
+                CloneBranch(repoSource, repoTarget, copyService, branch, defaultBranchFriendlyName, author, committer, subDirTarget, stagePatterns);
             }
         }
 
@@ -25,7 +26,8 @@ namespace GitMerger.Core
             string rootBranchFriendlyName,
             Signature author,
             Signature committer,
-            DirectoryInfo? subDirTarget = null
+            DirectoryInfo? subDirTarget = null,
+            string[]? stagePatterns = null
             )
         {
             if (rootBranchFriendlyName == null)
@@ -47,7 +49,12 @@ namespace GitMerger.Core
 
             copyService.Copy(new DirectoryInfo(repoSource.Info.WorkingDirectory), subDirTarget ?? new DirectoryInfo(repoTarget.Info.WorkingDirectory), true);
 
-            Commands.Stage(repoTarget, "*");
+            // Stage files based on patterns
+            var patterns = stagePatterns ?? new[] { "*" };
+            foreach (var pattern in patterns)
+            {
+                Commands.Stage(repoTarget, pattern);
+            }
 
             try
             {
