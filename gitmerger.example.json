@@ -1,0 +1,14 @@
+{
+  "SourceRepo": "/path/to/source",
+  "TargetRepo": "/path/to/target",
+  "Subdir": "src",
+  "Author": {
+    "Name": "Your Name",
+    "Email": "your@email.com"
+  },
+  "RootBranch": "main",
+  "StagePatterns": [
+    "*"
+  ],
+  "CopyService": "systemio"
+}
