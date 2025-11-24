@@ -2,9 +2,17 @@
 
 A .NET 9 command-line tool that ports the last commit from every branch of a source Git repository to a target repository, maintaining the same branch structure.
 
+**New in this version:** Configuration-driven setup with JSON config files and command-line arguments for non-interactive, automated usage!
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
+- [Usage](#usage)
+  - [Quick Start](#quick-start)
+  - [Configuration File](#configuration-file)
+  - [Command-Line Arguments](#command-line-arguments)
+  - [Interactive Mode](#interactive-mode)
+- [Configuration Options](#configuration-options)
 - [Limitations](#limitations)
 - [Use Case Example](#use-case-example)
 - [How It Works](#how-it-works)
@@ -26,8 +34,8 @@ Before using git-merger, ensure you have the following installed:
   - Verify installation: `git --version`
 
 ### Platform Requirements
-- **Windows**: Fully supported (uses Robocopy for file operations)
-- **Linux/macOS**: Requires modification (Robocopy is Windows-specific)
+- **Windows**: Fully supported (uses Robocopy for file operations by default)
+- **Linux/macOS**: Fully supported (use `--copy-service systemio` for cross-platform file operations)
 
 ### Knowledge Requirements
 - Basic understanding of Git concepts (branches, commits, repositories)
@@ -54,25 +62,7 @@ dotnet build GitMerger.sln --configuration Release
 dotnet build GitMerger.sln
 ```
 
-### 3. Run the Application
-
-#### Option A: Using dotnet run
-```bash
-cd GitMerger
-dotnet run
-```
-
-#### Option B: Using the compiled executable
-```bash
-# After building in Release mode
-cd GitMerger/bin/Release/net9.0
-dotnet GitMerger.dll
-
-# Or on Windows
-GitMerger.exe
-```
-
-### 4. Prepare Your Repositories
+### 3. Prepare Your Repositories
 
 Before running the tool, you need:
 
@@ -89,10 +79,152 @@ cd ..
 
 ---
 
-## Limitations
+## Usage
 
-### Platform Limitations
-- **Windows Only**: The tool uses `Robocopy` (a Windows-specific utility) for file copying operations. On Linux/macOS, you would need to implement an alternative `ICopyService` that uses platform-appropriate file copy commands.
+Git-merger now supports three modes of operation:
+
+### Quick Start
+
+```bash
+# Generate an example configuration file
+cd GitMerger/bin/Release/net9.0
+dotnet GitMerger.dll --init-config
+
+# Edit the generated gitmerger.json with your settings
+# Then run with the configuration
+dotnet GitMerger.dll --config gitmerger.json
+```
+
+### Configuration File
+
+Create a `gitmerger.json` file with your settings:
+
+```json
+{
+  "SourceRepo": "/path/to/source",
+  "TargetRepo": "/path/to/target",
+  "Subdir": "src",
+  "Author": {
+    "Name": "Your Name",
+    "Email": "your@email.com"
+  },
+  "RootBranch": "main",
+  "StagePatterns": ["*"],
+  "CopyService": "systemio"
+}
+```
+
+**Configuration Options:**
+- `SourceRepo`: Full path to the source Git repository
+- `TargetRepo`: Full path to the target Git repository
+- `Subdir`: Subdirectory within the target repository where files will be placed
+- `Author.Name`: Name for commit author
+- `Author.Email`: Email for commit author
+- `RootBranch`: The root branch name (default: "master")
+- `StagePatterns`: Array of file patterns to stage (default: ["*"])
+- `CopyService`: Copy service to use - "robocopy" (Windows) or "systemio" (cross-platform)
+
+Then run:
+
+```bash
+dotnet GitMerger.dll --config gitmerger.json
+```
+
+### Command-Line Arguments
+
+Override any configuration value using command-line arguments:
+
+```bash
+# Use specific paths
+dotnet GitMerger.dll -s /path/to/source -t /path/to/target -d src
+
+# With custom author information
+dotnet GitMerger.dll \
+  -s /path/to/source \
+  -t /path/to/target \
+  -d src \
+  -n "John Doe" \
+  -e "john@example.com"
+
+# For Linux/macOS, use the cross-platform copy service
+dotnet GitMerger.dll \
+  -s /path/to/source \
+  -t /path/to/target \
+  -d src \
+  -c systemio
+
+# Use a different root branch
+dotnet GitMerger.dll \
+  --config myconfig.json \
+  --root-branch main
+```
+
+**Command-Line Options:**
+- `--config <path>` or `-cfg`: Load configuration from JSON file
+- `--source <path>` or `-s`: Source repository path
+- `--target <path>` or `-t`: Target repository path
+- `--subdir <path>` or `-d`: Subdirectory in target repository
+- `--author-name <name>` or `-n`: Author name for commits
+- `--author-email <email>` or `-e`: Author email for commits
+- `--root-branch <name>` or `-b`: Root branch name
+- `--copy-service <type>` or `-c`: Copy service type (robocopy or systemio)
+- `--init-config [path]`: Create example configuration file
+- `--help` or `-h`: Show help message
+
+### Interactive Mode
+
+If you don't provide all required values via config file or command-line arguments, the tool will prompt you interactively:
+
+```bash
+dotnet GitMerger.dll
+```
+
+You'll be prompted for:
+1. Source repository path
+2. Target repository path
+3. Subdirectory
+
+---
+
+## Configuration Options
+
+### Copy Services
+
+Git-merger supports two copy services:
+
+1. **robocopy** (Windows-only): Uses the Windows Robocopy utility for file operations
+   - Fast and efficient on Windows
+   - Automatically excludes `.git` directory
+   
+2. **systemio** (Cross-platform): Uses .NET's System.IO for file operations
+   - Works on Windows, Linux, and macOS
+   - Pure .NET implementation
+
+Choose the appropriate copy service based on your platform:
+- Windows: Use either `robocopy` (default) or `systemio`
+- Linux/macOS: Use `systemio`
+
+### Stage Patterns
+
+Control which files are staged and committed using the `StagePatterns` configuration:
+
+```json
+{
+  "StagePatterns": ["*"]  // Stage all files (default)
+}
+```
+
+You can specify multiple patterns:
+
+```json
+{
+  "StagePatterns": ["*.cs", "*.csproj"]  // Only stage C# files
+}
+```
+
+---
+
+## Limitations
 
 ### Functional Limitations
 1. **Last Commit Only**: The tool only ports the **latest commit** from each branch, not the entire commit history.
@@ -100,25 +232,13 @@ cd ..
 2. **Branch Structure**: 
    - Creates branches in the target repository matching the source repository's branch names
    - Removes `origin/` prefix from remote branch names
-   - Uses "master" as the default root branch (hardcoded)
 
-3. **Git Configuration**:
-   - Uses a hardcoded test signature for commits:
-     - Name: "test"
-     - Email: "test@mail.eu"
-   - You should modify `Program.cs` to use appropriate author information
-
-4. **File Operations**:
+3. **File Operations**:
    - Excludes `.git` directory when copying (as intended)
-   - Stages all files (`*`) in the target repository
+   - Stages files based on configured patterns (default: all files)
    - Silently catches and logs commit exceptions
 
-5. **Interactive Console**:
-   - Requires manual input for repository paths
-   - No command-line argument support
-   - Input validation is basic (checks for null/empty strings only)
-
-6. **No Merge Conflict Resolution**:
+4. **No Merge Conflict Resolution**:
    - If conflicts arise during the porting process, they must be resolved manually
    - The tool doesn't provide conflict resolution mechanisms
 
@@ -159,35 +279,45 @@ git init
 cd ..
 ```
 
-#### 2. Run git-merger
+#### 2. Create Configuration File
+
+Generate an example configuration:
+```bash
+cd git-merger/GitMerger/bin/Release/net9.0
+dotnet GitMerger.dll --init-config
+```
+
+Edit `gitmerger.json`:
+```json
+{
+  "SourceRepo": "/path/to/legacy-project",
+  "TargetRepo": "/path/to/new-project",
+  "Subdir": "src",
+  "Author": {
+    "Name": "John Doe",
+    "Email": "john@example.com"
+  },
+  "RootBranch": "master",
+  "StagePatterns": ["*"],
+  "CopyService": "systemio"
+}
+```
+
+#### 3. Run git-merger
 
 ```bash
-# Navigate to the built application
-cd git-merger/GitMerger/bin/Release/net9.0
+# Using configuration file
+dotnet GitMerger.dll --config gitmerger.json
 
-# Run the tool
-dotnet GitMerger.dll
+# Or using command-line arguments
+dotnet GitMerger.dll \
+  -s /path/to/legacy-project \
+  -t /path/to/new-project \
+  -d src \
+  -n "John Doe" \
+  -e "john@example.com" \
+  -c systemio
 ```
-
-#### 3. Provide Input
-
-The tool will prompt you for three inputs:
-
-```
-Cartella repo partenza:
-C:\path\to\legacy-project
-
-Cartella repo destinazione:
-C:\path\to\new-project
-
-Subdir:
-src
-```
-
-**Input Explanation:**
-- **Cartella repo partenza** (Source repository path): Full path to your source Git repository
-- **Cartella repo destinazione** (Target repository path): Full path to your target Git repository
-- **Subdir**: Subdirectory within the target repository where files will be placed (e.g., "src", "code", or "." for root)
 
 #### 4. Result
 
@@ -231,6 +361,7 @@ git ls-files
 3. **Archive Migration**: Create snapshots of branch states for archival purposes
 4. **Code Organization**: Restructure files into subdirectories during the migration
 5. **Branch Consolidation**: Bring together branches from multiple source repositories
+6. **CI/CD Integration**: Automate repository migrations in build pipelines using configuration files
 
 ---
 
@@ -238,12 +369,16 @@ git ls-files
 
 ### Process Flow
 
-1. **Branch Iteration**: Iterates through all branches in the source repository
-2. **Checkout**: Checks out each branch in the source repository
-3. **Branch Creation**: Creates corresponding branches in the target repository (if they don't exist)
-4. **File Copy**: Uses Robocopy to copy files (excluding `.git`) to the target location
-5. **Commit**: Stages all changes and creates a commit in the target repository
-6. **Repeat**: Processes all branches sequentially
+1. **Configuration Loading**: Loads settings from JSON file (if exists)
+2. **Argument Parsing**: Overrides config values with command-line arguments
+3. **Interactive Prompting**: Prompts for any missing required values
+4. **Validation**: Validates that repositories exist and configuration is valid
+5. **Branch Iteration**: Iterates through all branches in the source repository
+6. **Checkout**: Checks out each branch in the source repository
+7. **Branch Creation**: Creates corresponding branches in the target repository (if they don't exist)
+8. **File Copy**: Uses the configured copy service to copy files (excluding `.git`) to the target location
+9. **Commit**: Stages configured patterns and creates a commit in the target repository
+10. **Repeat**: Processes all branches sequentially
 
 ### Core Components
 
@@ -252,14 +387,21 @@ git ls-files
   - `GitMerger.CloneBranch()`: Handles individual branch porting
   - `ICopyService`: Interface for file copy operations
   - `RobocopyService`: Windows-specific file copy implementation
+  - `SystemIOCopyService`: Cross-platform file copy implementation
+  - `CopyServiceFactory`: Creates appropriate copy service based on configuration
 
 - **GitMerger**: Console application providing the user interface
+  - `Configuration`: Configuration models and loaders
+  - `CommandLineParser`: Parses command-line arguments
+  - `ConfigurationLoader`: Loads and saves JSON configuration files
 
 ### Technology Stack
 
 - **.NET 9**: Modern cross-platform framework
 - **LibGit2Sharp 0.30.0**: .NET bindings for libgit2 (Git operations)
-- **Robocopy**: Windows utility for file copying
+- **System.Text.Json**: Built-in JSON serialization (for configuration)
+- **Robocopy**: Windows utility for file copying (optional)
+- **System.IO**: .NET file operations (cross-platform alternative)
 
 ---
 
