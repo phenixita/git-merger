@@ -22,10 +22,8 @@ namespace GitMerger.Core
             {
                 return new RobocopyService();
             }
-            else
-            {
-                return new SystemIOCopyService();
-            }
+            
+            return new SystemIOCopyService();
         }
     }
 }
